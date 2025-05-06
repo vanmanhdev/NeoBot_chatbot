@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>NeoBot Chat</title>
+    <!-- Include marked.js library for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Ensure container is centered vertically */
+        }
+        .chat-container {
+            width: 90%;
+            max-width: 700px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Keep content contained */
+            height: 80vh; /* Set a relative height */
+            max-height: 800px; /* Optional max height */
+        }
+        .chat-header {
+             background-color: #4a90e2; /* A nice blue */
+             color: white;
+             padding: 15px;
+             text-align: center;
+             font-size: 1.2em;
+             border-bottom: 1px solid #ddd;
+        }
+        .chat-history {
+            flex-grow: 1; /* Allow history to take available space */
+            border: none; /* Remove inner border */
+            overflow-y: scroll; /* Enable scrolling */
+            padding: 15px;
+            background-color: #f9f9f9;
+            display: flex; /* Needed for scroll anchoring */
+            flex-direction: column; /* Stack messages vertically */
+        }
+        .message { /* Common styling for messages */
+            padding: 8px 12px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            max-width: 75%;
+            word-wrap: break-word; /* Break long words */
+            line-height: 1.4; /* Improve readability */
+        }
+        .user-message {
+            align-self: flex-end; /* Align user messages to the right */
+            background-color: #dcf8c6; /* WhatsApp-like green */
+            text-align: right;
+            color: #333;
+        }
+        .bot-message {
+            align-self: flex-start; /* Align bot messages to the left */
+            background-color: #e5e5ea; /* Light grey */
+            text-align: left;
+            color: #333; /* Darker text */
+        }
+         /* Style for error messages from the bot */
+        .error-message {
+            align-self: flex-start;
+            background-color: #ffebee; /* Light red background */
+            text-align: left;
+            color: #d32f2f; /* Darker red text */
+            font-style: italic;
+            border: 1px solid #ef9a9a; /* Light red border */
+        }
+         /* Optional: Add some basic styling for Markdown elements if needed */
+         .bot-message pre, .error-message pre { /* Style code blocks */
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto; /* Allow horizontal scrolling for long code */
+            border: 1px solid #ddd;
+            white-space: pre-wrap; /* Wrap long lines in code blocks */
+            word-wrap: break-word;
+         }
+         .bot-message code, .error-message code { /* Style inline code */
+             font-family: monospace;
+             background-color: #eee;
+             padding: 2px 4px;
+             border-radius: 3px;
+         }
+         .bot-message ul, .bot-message ol,
+         .error-message ul, .error-message ol { /* Indent lists slightly */
+             margin-left: 20px;
+             padding-left: 1.2em; /* Ensure enough space for markers */
+         }
+          .bot-message li, .error-message li {
+              margin-bottom: 0.3em; /* Space between list items */
+          }
+          .bot-message p, .error-message p {
+              margin-top: 0.5em; /* Add space before paragraphs inside messages */
+              margin-bottom: 0.5em;
+          }
+          /* Remove default margin from first/last element inside message */
+          .bot-message > *:first-child, .error-message > *:first-child { margin-top: 0; }
+          .bot-message > *:last-child, .error-message > *:last-child { margin-bottom: 0; }
+
+
+        .input-area {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #eee;
+            background-color: #fff;
+        }
+        .input-area input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px; /* Rounded input */
+            margin-right: 10px;
+            font-size: 1em;
+        }
+        .input-area button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #4a90e2; /* Match header */
+            color: white;
+            border-radius: 20px; /* Rounded button */
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-size: 1em;
+        }
+        .input-area button:hover {
+            background-color: #357abd; /* Darker blue on hover */
+        }
+         .input-area button:disabled {
+             background-color: #aaa;
+             cursor: not-allowed;
+         }
+         #loading-indicator {
+             display: none; /* Hidden by default */
+             text-align: center;
+             padding: 10px;
+             color: #888;
+             font-style: italic;
+             align-self: center; /* Center indicator */
+         }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        NeoBot
+    </div>
+
+    <div class="chat-history">
+        <!-- Initial Bot Message (No specific ID needed now) -->
+        <div class="message bot-message">NeoBot: Hello! How can I help you today?</div>
+
+        <!-- Loading Indicator (hidden initially) -->
+        <div id="loading-indicator">
+            <i>NeoBot is thinking...</i>
+        </div>
+        <!-- Chat messages will be appended here by JavaScript -->
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Ask NeoBot something...">
+        <button id="send-button">Send</button>
+    </div>
+</div>
+
+<script>
+    // Get references to the HTML elements
+    const chatHistory = document.querySelector('.chat-history');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+    const loadingIndicator = document.getElementById('loading-indicator');
+
+    // Function to add a message to the chat history display
+    function addMessage(text, sender, isError = false) {
+        const messageDiv = document.createElement('div'); // Use div for consistency
+        messageDiv.classList.add('message'); // Add common message class
+
+        let contentPrefix = '';
+        let contentBody = text;
+
+        if (isError && sender === 'bot') {
+             messageDiv.classList.add('error-message');
+             contentPrefix = 'NeoBot Error: ';
+             // Display errors as plain text
+             const textNode = document.createTextNode(contentBody);
+             messageDiv.appendChild(document.createTextNode(contentPrefix));
+             messageDiv.appendChild(textNode);
+
+        } else if (sender === 'bot') {
+             messageDiv.classList.add('bot-message');
+             contentPrefix = 'NeoBot: ';
+             try {
+                 // Use marked.parse() to convert potential Markdown to HTML
+                 messageDiv.innerHTML = marked.parse(contentBody);
+                 messageDiv.insertBefore(document.createTextNode(contentPrefix), messageDiv.firstChild);
+             } catch(e) {
+                 console.error("Markdown parsing error:", e);
+                 // Fallback to plain text if parsing fails
+                 messageDiv.textContent = contentPrefix + contentBody;
+             }
+        } else { // User message
+            messageDiv.classList.add('user-message');
+            contentPrefix = 'You: ';
+            // User messages are always plain text
+            messageDiv.textContent = contentPrefix + contentBody;
+        }
+
+        // Insert message before the loading indicator if it exists
+        const existingIndicator = chatHistory.querySelector('#loading-indicator');
+        if (existingIndicator) {
+             chatHistory.insertBefore(messageDiv, existingIndicator);
+        } else {
+             chatHistory.appendChild(messageDiv);
+        }
+
+        chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll down
+    }
+
+    // Function to handle sending a message
+    async function sendMessage() {
+        const question = userInput.value.trim();
+
+        if (!question) {
+            return;
+        }
+
+        addMessage(question, 'user');
+        userInput.value = '';
+        sendButton.disabled = true;
+        loadingIndicator.style.display = 'block'; // Show loading indicator
+        chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll down
+
+        try {
+            const apiUrl = `/api/ask?question=${encodeURIComponent(question)}`;
+            const response = await fetch(apiUrl);
+
+            if (!response.ok) {
+                let errorMsg = `HTTP Error ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData && errorData.message) errorMsg += ` - ${errorData.message}`;
+                    else if (errorData && errorData.detail) errorMsg += ` - ${errorData.detail}`;
+                    else if (errorData && errorData.error) errorMsg += ` - ${errorData.error}`;
+                } catch (e) { /* Ignore if error response wasn't JSON */ }
+                console.error("API Error:", errorMsg);
+                addMessage(`There was an error contacting the server. (${errorMsg})`, 'bot', true);
+            } else {
+                const data = await response.json(); // data = { answer: "...", error: "..." }
+                if (data.error) {
+                     console.error("RAG Service Error:", data.error);
+                     addMessage(`There was an error processing your request: ${data.error}`, 'bot', true);
+                } else if (data.answer != null) { // Check for null explicitly
+                    addMessage(data.answer, 'bot');
+                } else {
+                     addMessage("Sorry, I didn't get a valid answer.", 'bot', true);
+                }
+            }
+        } catch (error) {
+            console.error('Network or Fetch Error:', error);
+            addMessage('Could not reach the server. Please check your connection or try again later.', 'bot', true);
+        } finally {
+            sendButton.disabled = false; // Re-enable button
+            loadingIndicator.style.display = 'none'; // Hide loading indicator
+            userInput.focus(); // Put cursor back in input box
+        }
+    }
+
+    // --- Event Listeners ---
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // Initial focus on the input field
+    userInput.focus();
+
+</script>
+
+</body>
+</html>
