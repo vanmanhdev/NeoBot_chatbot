@@ -37,21 +37,6 @@ def main():
                 docs = loader.load()
                 all_docs.extend(docs)
                 print(f"    Loaded {len(docs)} sections.")
-            # Example for PDF (requires pip install pypdf)
-            # elif source_file.lower().endswith(".pdf"):
-            #     print(f"  Loading PDF file: {source_file}")
-            #     try:
-            #         from langchain_community.document_loaders import PyPDFLoader
-            #         loader = PyPDFLoader(source_file)
-            #         docs = loader.load_and_split() # PyPDFLoader can also split pages
-            #         all_docs.extend(docs)
-            #         print(f"    Loaded {len(docs)} pages/sections.")
-            #     except ImportError:
-            #          print("   ERROR: PyPDFLoader requires 'pip install pypdf'. Skipping PDF.")
-            #          continue
-            #     except Exception as pdf_error:
-            #          print(f"   ERROR loading PDF {source_file}: {pdf_error}")
-            #          continue
             else:
                 print(f"  Warning: Unsupported file type for '{source_file}'. Skipping.")
                 continue

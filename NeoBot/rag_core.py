@@ -2,25 +2,17 @@ import os
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain.prompts import PromptTemplate
-# from langchain.chains import RetrievalQA # <-- We won't use RetrievalQA directly anymore
-from langchain_core.runnables import RunnablePassthrough # <-- Import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser # <-- Import StrOutputParser
+from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
 from langchain_core.runnables import RunnableParallel
 
-# --- Select and import ONE LLM integration ---
-# Option A: Ollama
-USE_OLLAMA = True # Set to False if using Google Gemini
-from langchain_community.llms import Ollama
 
-# Option B: Google Gemini
-# USE_OLLAMA = False # Set to True if using Ollama
-# from langchain_google_genai import ChatGoogleGenerativeAI
-# --- ---
+USE_OLLAMA = True
+from langchain_community.llms import Ollama
 
 load_dotenv()
 
-# --- Configuration (Should match index_data.py) ---
+
 VECTORSTORE_PATH = "./chroma_db_neobot" # Relative path inside NeoBot
 EMBEDDING_MODEL = "paraphrase-multilingual-mpnet-base-v2"
 # --- LLM Configuration ---
