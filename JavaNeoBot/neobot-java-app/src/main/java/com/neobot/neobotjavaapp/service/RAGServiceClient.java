@@ -26,7 +26,7 @@ public class RAGServiceClient {
     private String ragApiUrl;
 
     // Timeout duration for the API call (e.g., 30 seconds)
-    private static final Duration API_TIMEOUT = Duration.ofSeconds(60);
+    private static final Duration API_TIMEOUT = Duration.ofSeconds(600);
 
     // Constructor injection for WebClient
     public RAGServiceClient(WebClient webClient) {

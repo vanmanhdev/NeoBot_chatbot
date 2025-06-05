@@ -12,20 +12,8 @@ public class NeobotJavaAppApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(NeobotJavaAppApplication.class, args);
 	}
-
-	// Remove or comment out the RestTemplate bean
-    /*
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
-    */
-
-	// Add this Bean for WebClient
 	@Bean
 	public WebClient webClient(WebClient.Builder builder) {
-		// In a real app, you might configure base URLs, timeouts, headers etc. here
-		// builder = builder.baseUrl("http://some-default-url"); // Example
 		return builder.build();
 	}
 }

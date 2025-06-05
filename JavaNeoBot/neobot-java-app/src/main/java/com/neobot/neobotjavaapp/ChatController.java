@@ -5,11 +5,8 @@ import com.neobot.neobotjavaapp.dto.PythonRagResponse;
 import com.neobot.neobotjavaapp.service.RAGServiceClient;
 import org.slf4j.Logger; // Import Logger
 import org.slf4j.LoggerFactory; // Import LoggerFactory
-// Removed ResponseEntity import
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-// Removed PostMapping import
-// Removed RequestBody import
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import reactor.core.publisher.Mono; // Import Mono

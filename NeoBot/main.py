@@ -6,13 +6,11 @@ import rag_core # Import the module containing our RAG logic
 # --- Data Models for API ---
 
 class ChatQuery(BaseModel):
-    """Request model for incoming chat questions."""
     question: str
 
 class ChatResponse(BaseModel):
-    """Response model for the chatbot's answer."""
     answer: str
-    error: str | None = None # Optional error message
+    error: str | None = None
 
 # --- FastAPI Application ---
 

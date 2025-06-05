@@ -8,8 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Configuration ---
-# List ALL the source files you want to include
-DATA_SOURCES = ["neobot_info.txt", "general_ai_info.txt"]
+DATA_SOURCES = ["neobot_info.txt", "general_ai_info.txt", "dialog.txt"]
 VECTORSTORE_PATH = "./chroma_db_neobot" # Directory to save the vector store
 EMBEDDING_MODEL = "paraphrase-multilingual-mpnet-base-v2"
 CHUNK_SIZE = 500
@@ -81,8 +80,7 @@ def main():
         )
         print(f"  Existing vector store loaded. Contains approx {vectorstore._collection.count()} embeddings.")
         print(f"  Adding {len(chunks)} new chunks...")
-        # Add new chunks with unique IDs (Chroma handles deduplication based on content/ID)
-        vectorstore.add_documents(chunks) # Simpler way to add
+        vectorstore.add_documents(chunks)
         print("  New documents added successfully.")
 
     except Exception as add_err:
@@ -99,12 +97,7 @@ def main():
               print(f"  ERROR: Failed to create vector store from scratch: {create_err}")
               return
 
-    # --- Persist manually (needed if using `add_documents`) ---
-    # Even though Chroma auto-persists, an explicit persist after adding can be safer.
-    # Let's keep the manual persist() call as it was causing a warning, not an error.
-    # If you removed it previously based on the warning, you might need to add it back
-    # or rely on Chroma's auto-persistence after `add_documents`. Let's assume auto-persistence works.
-    # vectorstore.persist() # Re-add if experiencing issues with data not saving after 'add_documents'
+
 
     print("-" * 30)
     print("Indexing Complete!")

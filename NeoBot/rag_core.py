@@ -75,13 +75,10 @@ def _load_llm():
 # --- NEW Function to format retrieved documents ---
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
-# --- ---
 
-# Add this import at the top
 
 
 def _initialize_rag_chain():
-    """Initializes all components needed for the RAG chain using LCEL (Revised)."""
     print("Initializing RAG components (LCEL Revised)...")
     vectorstore_abs_path = os.path.abspath(VECTORSTORE_PATH)
     if not os.path.exists(VECTORSTORE_PATH):
@@ -109,28 +106,19 @@ def _initialize_rag_chain():
 
     prompt = PromptTemplate(template=PROMPT_TEMPLATE, input_variables=["context", "question", "language"])
 
-    # --- Define the retrieval and formatting part ---
-    # This part takes a dictionary {"question": str, "language": str} as input
-    # and outputs a dictionary {"context": str, "question": str, "language": str}
     setup_and_retrieval = RunnableParallel(
-        # Extracts 'question' from input, retrieves, formats, assigns to 'context'
         context=lambda inputs: (retriever | format_docs).invoke(inputs["question"]),
-        # Passes 'question' through from the original input
         question=lambda inputs: inputs["question"],
-        # Passes 'language' through from the original input
         language=lambda inputs: inputs["language"]
     )
 
-    # --- Define the core logic chain (receives the dict from setup_and_retrieval) ---
     core_rag_logic = (
         prompt
         | llm
         | StrOutputParser()
     )
 
-    # --- Combine setup and core logic ---
     rag_chain = setup_and_retrieval | core_rag_logic
-    # The input to this combined chain is {"question": ..., "language": ...}
 
     print("LCEL RAG chain created successfully (Revised Structure).")
     return rag_chain
@@ -148,25 +136,18 @@ def get_rag_chain():
     return _components["rag_chain"]
 
 def query_rag(question: str) -> dict:
-    """Queries the RAG chain built with LCEL."""
     print(f"\nProcessing query: '{question}'")
     rag_chain = get_rag_chain()
     if rag_chain is None:
-        return {"answer": None, "source_documents": [], "error": "RAG chain is not available."} # Changed to empty list
+        return {"answer": None, "source_documents": [], "error": "RAG chain is not available."}
 
     try:
         language = "Vietnamese" if any(c in 'áàảãạăắằẳẵặâấầẩẫậđéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵ' for c in question.lower()) else "English"
         print(f"Detected language (heuristic): {language}")
 
-        # --- Prepare inputs for the LCEL chain ---
-        # The chain expects a dictionary containing keys that are needed *before* the prompt.
-        # Our chain setup passes 'question' and 'language' through.
         inputs_for_chain = {"question": question, "language": language}
 
         print("Invoking LCEL RAG chain...")
-        # For LCEL chains that return just the string answer, we invoke directly.
-        # To get source documents, we'd need a more complex chain setup (e.g., using RunnableParallel).
-        # For now, we focus on getting the answer working.
         answer = rag_chain.invoke(inputs_for_chain)
         print("LCEL RAG chain invocation complete.")
 
@@ -174,9 +155,6 @@ def query_rag(question: str) -> dict:
         if not answer:
             print("Warning: LLM returned an empty answer.")
             error_msg = "LLM returned an empty answer."
-
-        # Note: Getting source_documents with this simple LCEL chain is not straightforward.
-        # We return an empty list for now. A more advanced LCEL chain would be needed.
         return {"answer": answer.strip(), "source_documents": [], "error": error_msg}
 
     except Exception as e:
@@ -194,11 +172,7 @@ if __name__ == "__main__":
 
     test_questions = [
         "Who are you?",
-        "Bạn là ai?",
-        "What is RAG?",
-        "How do you answer questions?",
-        "What languages do you speak?",
-        "Tell me about Paris?" # Should indicate lack of info
+        "Bạn là ai?"
     ]
 
     # Initialize once before testing
